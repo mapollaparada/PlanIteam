@@ -1,0 +1,442 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Diario App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .note-card {
+            margin-bottom: 1rem;
+            border-left: 5px solid #6c757d;
+            background: #e9ecef;
+            color: #343a40;
+        }
+        .task-card {
+            margin-bottom: 1rem;
+            border-left: 5px solid #0d6efd;
+            background: #e7f1ff;
+            color: #0d2956;
+        }
+        .budget-card {
+            margin-bottom: 1rem;
+            border-left: 5px solid #ffc107;
+            background: #fffbe6;
+            color: #856404;
+        }
+        .is-invalid { border-color: #dc3545 !important; }
+        #add-btn.btn-secondary { background: #6c757d; color: #fff; border: none; }
+        #add-btn.btn-primary { background: #0d6efd; color: #fff; border: none; }
+        #add-btn.btn-warning { background: #ffc107; color: #212529; border: none; }
+        .category-dropdown {
+            position: relative;
+        }
+        .category-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ced4da;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .category-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        .category-option:hover {
+            background-color: #f8f9fa;
+        }
+        .category-option:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <h1 class="mb-4 text-center">Mi Diario App</h1>
+    <div class="mb-4">
+        <form id="compact-form" class="row g-2 align-items-end mb-3">
+            <div class="col-md-2">
+                <select class="form-select" id="compact-type" required>
+                    <option value="nota">Nota</option>
+                    <option value="tarea">Tarea</option>
+                    <option value="presupuesto">Presupuesto</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="category-dropdown">
+                    <input type="text" class="form-control" id="compact-category" placeholder="Categoría" required autocomplete="off">
+                    <div class="category-options" id="category-options"></div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" id="compact-title" placeholder="Título" required>
+            </div>
+            <div class="col-md-2 d-none" id="compact-text-col">
+                <input type="text" class="form-control" id="compact-text" placeholder="Texto">
+            </div>
+            <div class="col-md-2 d-none" id="compact-link-col">
+                <input type="url" class="form-control" id="compact-link" placeholder="Link">
+            </div>
+            <div class="col-md-2 d-none" id="compact-price-col">
+                <input type="number" class="form-control" id="compact-price" placeholder="Precio">
+            </div>
+            <div class="col-md-2 d-none" id="compact-start-col">
+                <input type="date" class="form-control" id="compact-start" placeholder="Inicio">
+            </div>
+            <div class="col-md-2 d-none" id="compact-end-col">
+                <input type="date" class="form-control" id="compact-end" placeholder="Fin">
+            </div>
+            <div class="col-md-2 d-none" id="compact-budget-col">
+                <input type="number" class="form-control" id="compact-budget" placeholder="Presupuesto">
+            </div>
+            <div class="col-md-2">
+                <button id="add-btn" class="btn btn-primary w-100" type="submit">Agregar</button>
+            </div>
+        </form>
+    </div>
+    <div class="mb-4">
+        <select id="type-filter" class="form-select mb-2" style="max-width:220px;display:inline-block;">
+            <option value="">Todos los tipos</option>
+            <option value="nota">Notas</option>
+            <option value="tarea">Tareas</option>
+            <option value="presupuesto">Presupuestos</option>
+        </select>
+        <select id="category-filter" class="form-select mb-2" style="max-width:220px;display:inline-block;">
+            <option value="">Todas las categorías</option>
+        </select>
+    </div>
+    <div id="items-list"></div>
+</div>
+
+<!-- Modal para editar -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Ítem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-form">
+                    <input type="hidden" id="edit-id">
+                    <div class="mb-3">
+                        <label for="edit-type" class="form-label">Tipo</label>
+                        <select class="form-select" id="edit-type" required>
+                            <option value="nota">Nota</option>
+                            <option value="tarea">Tarea</option>
+                            <option value="presupuesto">Presupuesto</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-category" class="form-label">Categoría</label>
+                        <input type="text" class="form-control" id="edit-category" required list="edit-categories-list">
+                        <datalist id="edit-categories-list"></datalist>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-title" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="edit-title" required>
+                    </div>
+                    <!-- Campos dinámicos -->
+                    <div class="mb-3 d-none" id="edit-text-group">
+                        <label for="edit-text" class="form-label">Texto</label>
+                        <input type="text" class="form-control" id="edit-text">
+                    </div>
+                    <div class="mb-3 d-none" id="edit-link-group">
+                        <label for="edit-link" class="form-label">Link</label>
+                        <input type="url" class="form-control" id="edit-link">
+                    </div>
+                    <div class="mb-3 d-none" id="edit-price-group">
+                        <label for="edit-price" class="form-label">Precio</label>
+                        <input type="number" class="form-control" id="edit-price">
+                    </div>
+                    <div class="mb-3 d-none" id="edit-start-group">
+                        <label for="edit-start" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="edit-start">
+                    </div>
+                    <div class="mb-3 d-none" id="edit-end-group">
+                        <label for="edit-end" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="edit-end">
+                    </div>
+                    <div class="mb-3 d-none" id="edit-budget-group">
+                        <label for="edit-budget" class="form-label">Presupuesto</label>
+                        <input type="number" class="form-control" id="edit-budget">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveEdit()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const API_URL = '/items';
+const typeFilter = document.getElementById('type-filter');
+const categoryFilter = document.getElementById('category-filter');
+const itemsList = document.getElementById('items-list');
+
+function getCategories(items) {
+    return Array.from(new Set(items.map(i => i.category).filter(Boolean)));
+}
+
+function renderItems(items) {
+    itemsList.innerHTML = '';
+    if (!items.length) {
+        itemsList.innerHTML = '<div class="alert alert-info">No hay elementos.</div>';
+        return;
+    }
+    items.forEach(item => {
+        let html = '';
+        if (item.type === 'nota') {
+            html = `<div class='card note-card'><div class='card-body'><h5>${item.title}</h5><span class='badge bg-secondary mb-2'>${item.category}</span><p>${item.text}</p><div class='float-end'><button class='btn btn-sm btn-warning me-2' onclick='editItem("${item.id}")'>Editar</button><button class='btn btn-sm btn-danger' onclick='deleteItem("${item.id}")'>Eliminar</button></div></div></div>`;
+        } else if (item.type === 'tarea') {
+            html = `<div class='card task-card'><div class='card-body'><h5>${item.title}</h5><span class='badge bg-primary mb-2'>${item.category}</span><div><b>Inicio:</b> ${item.start}${item.end ? ' <b>Fin:</b> ' + item.end : ''}${item.budget ? ' <b>Presupuesto:</b> $' + item.budget : ''}</div><div class='float-end'><button class='btn btn-sm btn-warning me-2' onclick='editItem("${item.id}")'>Editar</button><button class='btn btn-sm btn-danger' onclick='deleteItem("${item.id}")'>Eliminar</button></div></div></div>`;
+        } else if (item.type === 'presupuesto') {
+            html = `<div class='card budget-card'><div class='card-body'><h5>${item.title}</h5><span class='badge bg-warning mb-2'>${item.category}</span><div>${item.link ? `<a href='${item.link}' target='_blank'>Ver Link</a><br>` : ''}${item.price ? `<b>Precio:</b> $${item.price}` : '<em>Sin precio especificado</em>'}</div><div class='float-end'><button class='btn btn-sm btn-warning me-2' onclick='editItem("${item.id}")'>Editar</button><button class='btn btn-sm btn-danger' onclick='deleteItem("${item.id}")'>Eliminar</button></div></div></div>`;
+        }
+        itemsList.innerHTML += html;
+    });
+}
+
+let categories = [];
+let allItems = [];
+function updateCategorySelects() {
+    // Ya no necesitamos datalist, usaremos dropdown personalizado
+}
+function showCategoryOptions() {
+    const input = document.getElementById('compact-category');
+    const dropdown = document.getElementById('category-options');
+    const value = input.value.toLowerCase();
+    
+    // Mostrar todas las categorías si no hay texto, o filtrar
+    const filtered = value ? categories.filter(c => c.toLowerCase().includes(value)) : categories;
+    
+    if (filtered.length > 0) {
+        dropdown.innerHTML = filtered.map(c => 
+            `<div class="category-option" onclick="selectCategory('${c}')">${c}</div>`
+        ).join('');
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+function selectCategory(category) {
+    document.getElementById('compact-category').value = category;
+    document.getElementById('category-options').style.display = 'none';
+}
+function hideCategoryOptions() {
+    setTimeout(() => {
+        document.getElementById('category-options').style.display = 'none';
+    }, 150);
+}
+async function fetchItemsAndRender() {
+    const res = await fetch(API_URL);
+    allItems = await res.json();
+    // Actualizar categorías global a partir de TODOS los ítems (siempre)
+    categories = Array.from(new Set(allItems.map(i => i.category).filter(Boolean)));
+    // Mantener la selección actual del filtro
+    const currentCategoryFilter = categoryFilter.value;
+    // Actualizar filtro de categorías con TODAS las categorías
+    categoryFilter.innerHTML = '<option value="">Todas las categorías</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    // Restaurar la selección previa si existe
+    if (currentCategoryFilter && categories.includes(currentCategoryFilter)) {
+        categoryFilter.value = currentCategoryFilter;
+    }
+    // Aplicar filtros solo para mostrar
+    let items = allItems;
+    if (typeFilter.value) items = items.filter(i => i.type === typeFilter.value);
+    if (categoryFilter.value) items = items.filter(i => i.category === categoryFilter.value);
+    renderItems(items);
+}
+// Gestión de categorías - ahora automática
+window.deleteItem = async function(id) {
+    await fetch(`${API_URL}/${id}`, {method:'DELETE'});
+    fetchItemsAndRender();
+}
+
+// Funciones para editar
+window.editItem = function(id) {
+    const item = allItems.find(i => i.id === id);
+    if (!item) return;
+    
+    // Llenar el modal con los datos del ítem
+    document.getElementById('edit-id').value = item.id;
+    document.getElementById('edit-type').value = item.type;
+    document.getElementById('edit-category').value = item.category;
+    document.getElementById('edit-title').value = item.title;
+    
+    // Actualizar las categorías en el datalist del modal
+    document.getElementById('edit-categories-list').innerHTML = categories.map(c => `<option value="${c}"></option>`).join('');
+    
+    // Campos específicos según el tipo
+    if (item.type === 'nota') {
+        document.getElementById('edit-text').value = item.text || '';
+    } else if (item.type === 'tarea') {
+        document.getElementById('edit-start').value = item.start || '';
+        document.getElementById('edit-end').value = item.end || '';
+        document.getElementById('edit-budget').value = item.budget || '';
+    } else if (item.type === 'presupuesto') {
+        document.getElementById('edit-link').value = item.link || '';
+        document.getElementById('edit-price').value = item.price || '';
+    }
+    
+    // Mostrar/ocultar campos según el tipo
+    updateEditFormFields();
+    
+    // Mostrar el modal
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+function updateEditFormFields() {
+    const type = document.getElementById('edit-type').value;
+    
+    // Ocultar todos los campos dinámicos
+    document.getElementById('edit-text-group').classList.add('d-none');
+    document.getElementById('edit-link-group').classList.add('d-none');
+    document.getElementById('edit-price-group').classList.add('d-none');
+    document.getElementById('edit-start-group').classList.add('d-none');
+    document.getElementById('edit-end-group').classList.add('d-none');
+    document.getElementById('edit-budget-group').classList.add('d-none');
+    
+    // Mostrar campos según el tipo
+    if (type === 'nota') {
+        document.getElementById('edit-text-group').classList.remove('d-none');
+    } else if (type === 'tarea') {
+        document.getElementById('edit-start-group').classList.remove('d-none');
+        document.getElementById('edit-end-group').classList.remove('d-none');
+        document.getElementById('edit-budget-group').classList.remove('d-none');
+    } else if (type === 'presupuesto') {
+        document.getElementById('edit-link-group').classList.remove('d-none');
+        document.getElementById('edit-price-group').classList.remove('d-none');
+    }
+}
+
+window.saveEdit = async function() {
+    const id = document.getElementById('edit-id').value;
+    const type = document.getElementById('edit-type').value;
+    const category = document.getElementById('edit-category').value.trim();
+    const title = document.getElementById('edit-title').value.trim();
+    
+    if (!category || !title) {
+        alert('Completa todos los campos obligatorios.');
+        return;
+    }
+    
+    let data = { type, category, title };
+    
+    if (type === 'nota') {
+        data.text = document.getElementById('edit-text').value.trim();
+        if (!data.text) { alert('Completa todos los campos obligatorios.'); return; }
+    } else if (type === 'tarea') {
+        data.start = document.getElementById('edit-start').value;
+        data.end = document.getElementById('edit-end').value;
+        data.budget = document.getElementById('edit-budget').value;
+    } else if (type === 'presupuesto') {
+        data.link = document.getElementById('edit-link').value.trim();
+        data.price = document.getElementById('edit-price').value;
+        // Precio ya no es obligatorio
+    }
+    
+    await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    
+    // Cerrar modal y actualizar lista
+    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+    fetchItemsAndRender();
+}
+
+// Cambiar color del botón de agregar según el tipo seleccionado
+const addBtn = document.getElementById('add-btn');
+const compactForm = document.getElementById('compact-form');
+const compactType = document.getElementById('compact-type');
+const compactCategory = document.getElementById('compact-category');
+const compactTitle = document.getElementById('compact-title');
+const compactTextCol = document.getElementById('compact-text-col');
+const compactText = document.getElementById('compact-text');
+const compactLinkCol = document.getElementById('compact-link-col');
+const compactLink = document.getElementById('compact-link');
+const compactPriceCol = document.getElementById('compact-price-col');
+const compactPrice = document.getElementById('compact-price');
+const compactStartCol = document.getElementById('compact-start-col');
+const compactStart = document.getElementById('compact-start');
+const compactEndCol = document.getElementById('compact-end-col');
+const compactEnd = document.getElementById('compact-end');
+const compactBudgetCol = document.getElementById('compact-budget-col');
+const compactBudget = document.getElementById('compact-budget');
+
+function updateCompactFormFields() {
+    const t = compactType.value;
+    compactTextCol.classList.toggle('d-none', t !== 'nota');
+    compactLinkCol.classList.toggle('d-none', t !== 'presupuesto');
+    compactPriceCol.classList.toggle('d-none', t !== 'presupuesto');
+    compactStartCol.classList.toggle('d-none', t !== 'tarea');
+    compactEndCol.classList.toggle('d-none', t !== 'tarea');
+    compactBudgetCol.classList.toggle('d-none', t !== 'tarea');
+    // Cambia el color del botón según el tipo, siempre deja una clase activa
+    addBtn.classList.remove('btn-primary','btn-warning','btn-secondary');
+    if (t === 'nota') addBtn.classList.add('btn-secondary');
+    else if (t === 'tarea') addBtn.classList.add('btn-primary');
+    else if (t === 'presupuesto') addBtn.classList.add('btn-warning');
+    else addBtn.classList.add('btn-primary'); // fallback por si acaso
+}
+compactType.addEventListener('change', updateCompactFormFields);
+updateCompactFormFields();
+
+// Eventos para el dropdown de categorías
+document.getElementById('compact-category').addEventListener('input', showCategoryOptions);
+document.getElementById('compact-category').addEventListener('focus', showCategoryOptions);
+document.getElementById('compact-category').addEventListener('blur', hideCategoryOptions);
+
+// Evento para cambio de tipo en el modal de edición
+document.getElementById('edit-type').addEventListener('change', updateEditFormFields);
+
+compactForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const type = compactType.value;
+    const category = compactCategory.value.trim();
+    if (!category) { 
+        alert('Escribe una categoría.'); 
+        return; 
+    }
+    let data = { type, category, title: compactTitle.value.trim() };
+    if (type === 'nota') {
+        data.text = compactText.value.trim();
+        if (!data.text) { alert('Completa todos los campos obligatorios.'); return; }
+    } else if (type === 'tarea') {
+        data.start = compactStart.value;
+        data.end = compactEnd.value;
+        data.budget = compactBudget.value;
+        // Fechas opcionales
+    } else if (type === 'presupuesto') {
+        data.link = compactLink.value.trim();
+        data.price = compactPrice.value;
+        // Precio ya no es obligatorio
+    }
+    if (!data.title) { alert('Completa todos los campos obligatorios.'); return; }
+    await fetch(API_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    compactForm.reset();
+    updateCompactFormFields();
+    fetchItemsAndRender();
+});
+typeFilter.addEventListener('change', fetchItemsAndRender);
+categoryFilter.addEventListener('change', fetchItemsAndRender);
+fetchItemsAndRender();
+</script>
+</body>
+</html>

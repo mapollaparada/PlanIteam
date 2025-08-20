@@ -1,0 +1,138 @@
+[
+    {
+        "id": "994fd7ec-4b71-48f8-a237-438eeaec554b",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "amortiguadores delanteros x2",
+        "link": "https://www.mercadolibre.cl/amortiguador-delantero-volkswagen-golf-a3-1820-19931999/up/MLCU389623784#reco_item_pos=0&reco_backend=item_decorator&reco_backend_type=function&reco_client=home_items-decorator-legacy&reco_id=ebd9df3c-ba52-458e-bfca-06fe10ef1335&reco_model=&c_id=/home/navigation-recommendations-seed/element&c_uid=d933edb5-1672-436b-ba9c-776edb43c1ea&da_id=navigation&da_position=0&id_origin=/home/dynamic_access&da_sort_algorithm=ranker",
+        "price": "35445"
+    },
+    {
+        "id": "89d92077-11a6-41e7-8e8c-ac6825adfaff",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "bombines maleta x2",
+        "link": "https://www.mercadolibre.cl/amortiguador-de-portalon-volkswagen-vento-19931999/up/MLCU21559550?pdp_filters=item_id:MLC1344212438",
+        "price": "13912"
+    },
+    {
+        "id": "60efc048-ab10-4255-b0f8-c2eceadcd862",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "pulir el techo",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "b3ea6689-4a9c-4058-b1eb-cae6494f5476",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "luces exterios bien chulo",
+        "link": "",
+        "price": ""
+    },
+    {
+        "id": "0fd719cc-d3c2-4363-beda-464b8218545b",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "luces interior",
+        "link": "",
+        "price": ""
+    },
+    {
+        "id": "c55fd126-8373-4fa3-9902-f80b1b68f956",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "lavar el auto",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "d4db011d-4ba0-4f20-96ac-6f6dcc678562",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "sensores puerta x4",
+        "link": "",
+        "price": ""
+    },
+    {
+        "id": "793e80d5-e27c-4856-98fb-7a3e8d60beec",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "acortar freno mano",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "0e662ffe-4845-4457-b373-9110ad1e74b3",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "resolte balatas",
+        "link": "https://articulo.mercadolibre.cl/MLC-1601759607-resorte-switch-de-freno-trasero-universal-_JM#polycard_client=search-nordic&position=20&search_layout=stack&type=item&tracking_id=fcdd15c7-c4f9-4b76-8ca5-3c131cfffff3&wid=MLC1601759607&sid=search",
+        "price": "25000"
+    },
+    {
+        "id": "16e3262c-bd3b-47a4-bb1d-b241d5b2de1a",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "arreglar ruedita asiento piloto",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "3158ae5f-ca3f-44fc-914a-2d87690817de",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "pegar letras atras (despues de pulido)",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "40947f53-e014-4c7a-8e39-a4bf4cca486d",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "pegar reflectante atras (despues de pulido)",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "e364a09a-a6e1-4d5a-a61a-f04637c96ae7",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "guantera",
+        "link": "",
+        "price": ""
+    },
+    {
+        "id": "89e12f30-b229-4693-9372-6fff194b5885",
+        "type": "presupuesto",
+        "category": "mk3",
+        "title": "bujia",
+        "link": "",
+        "price": ""
+    },
+    {
+        "id": "085fd3d9-1112-4b08-af5b-5081f435eeed",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "limpiar cuerpo aceleracion",
+        "start": "",
+        "end": "",
+        "budget": ""
+    },
+    {
+        "id": "96af993d-ae6d-4e3d-ac79-853984938e24",
+        "type": "tarea",
+        "category": "mk3",
+        "title": "revisar freno delanteros",
+        "start": "",
+        "end": "",
+        "budget": ""
+    }
+]
