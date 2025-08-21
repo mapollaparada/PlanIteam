@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<div class="d-flex align-items-center mb-4 flex-wrap">
+  <h2 class="me-3 mb-0">Bienvenido, {{ user.username }}</h2>
+  <div class="mb-2 mb-md-0">
+    <a href="?" class="badge rounded-pill bg-secondary me-1 {% if not espacio %}bg-primary text-white{% endif %}">Personal</a>
+    {% for e in espacios %}
+      <a href="?espacio={{ e.id }}" class="badge rounded-pill bg-secondary me-1 {% if espacio and espacio.id == e.id %}bg-primary text-white{% endif %}">{{ e.nombre }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="mb-4">
+  <form method="get" class="row g-2 align-items-end">
+    <input type="hidden" name="espacio" value="{{ espacio.id }}" {% if not espacio %}disabled{% endif %}>
+    <div class="col-auto">
+      <label for="tipo" class="form-label">Tipo:</label>
+      <select name="tipo" id="tipo" class="form-select" onchange="this.form.submit()">
+        <option value="" {% if not tipo %}selected{% endif %}>Todos</option>
+        <option value="nota" {% if tipo == 'nota' %}selected{% endif %}>Notas</option>
+        <option value="tarea" {% if tipo == 'tarea' %}selected{% endif %}>Tareas</option>
+        <option value="presupuesto" {% if tipo == 'presupuesto' %}selected{% endif %}>Presupuestos</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategoria">+ Categoría</button>
+    </div>
+    <div class="col-auto">
+      <a href="{% url 'exportar_csv' %}?{% if espacio %}espacio={{ espacio.id }}&{% endif %}{% if tipo %}tipo={{ tipo }}&{% endif %}{% if categoria_id %}categoria={{ categoria_id }}&{% endif %}" class="btn btn-outline-success"><i class="bi bi-download"></i> Exportar CSV</a>
+    </div>
+  </form>
+</div>
+
+<!-- Tags de categorías para filtrar -->
+<div class="mb-4">
+  <h5>Categorías</h5>
+  <a href="?{% if espacio %}espacio={{ espacio.id }}&{% endif %}{% if tipo %}tipo={{ tipo }}&{% endif %}" class="badge rounded-pill bg-secondary me-1 {% if not categoria_id %}bg-primary text-white{% endif %}">Todas</a>
+  {% for c in categorias %}
+    <a href="?{% if espacio %}espacio={{ espacio.id }}&{% endif %}{% if tipo %}tipo={{ tipo }}&{% endif %}categoria={{ c.id }}" class="badge rounded-pill bg-secondary me-1 {% if categoria_id and c.id|stringformat:'s' == categoria_id %}bg-primary text-white{% endif %}">{{ c.nombre }}</a>
+  {% endfor %}
+</div>
+
+<!-- Modal crear categoría -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'crear_categoria' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCategoriaLabel">Agregar Categoría</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control" name="nombre" placeholder="Nombre de la categoría" required>
+          {% if espacio %}
+            <input type="hidden" name="espacio" value="{{ espacio.id }}">
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  {% if not tipo or tipo == 'nota' %}
+  <div class="{% if tipo == 'nota' %}col-12{% else %}col-md-4{% endif %}">
+    <div class="card h-100">
+      <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        Notas
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalNota">Agregar</button>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for nota in notas %}
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <strong>{{ nota.titulo }}</strong><br>
+              <small class="text-muted">{{ nota.contenido|truncatechars:50 }}</small>
+            </div>
+            <div class="ms-2">
+              <button class="btn btn-sm btn-link text-primary" data-bs-toggle="modal" data-bs-target="#modalEditarNota{{ nota.id }}"><i class="bi bi-pencil-square"></i></button>
+              <form method="post" action="{% url 'eliminar_nota' nota.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </li>
+          <!-- Modal editar nota -->
+          <div class="modal fade" id="modalEditarNota{{ nota.id }}" tabindex="-1" aria-labelledby="modalEditarNotaLabel{{ nota.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="post" action="{% url 'editar_nota' nota.id %}">
+                  {% csrf_token %}
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarNotaLabel{{ nota.id }}">Editar Nota</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label">Título</label>
+                      <input type="text" class="form-control" name="titulo" value="{{ nota.titulo }}" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Contenido</label>
+                      <textarea class="form-control" name="contenido" rows="3">{{ nota.contenido }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Categoría</label>
+                      <select class="form-select" name="categoria">
+                        <option value="">Sin categoría</option>
+                        {% for c in categorias %}
+                          <option value="{{ c.id }}" {% if nota.categoria and nota.categoria.id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <li class="list-group-item">No hay notas.</li>
+        {% endfor %}
+      </ul>
+      {% if notas.has_other_pages %}
+      <nav class="mt-2">
+        <ul class="pagination pagination-sm justify-content-center">
+          {% if notas.has_previous %}
+            <li class="page-item"><a class="page-link" href="?notas_page={{ notas.previous_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&laquo;</a></li>
+          {% endif %}
+          {% for num in notas.paginator.page_range %}
+            <li class="page-item {% if notas.number == num %}active{% endif %}"><a class="page-link" href="?notas_page={{ num }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">{{ num }}</a></li>
+          {% endfor %}
+          {% if notas.has_next %}
+            <li class="page-item"><a class="page-link" href="?notas_page={{ notas.next_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&raquo;</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if not tipo or tipo == 'tarea' %}
+  <div class="{% if tipo == 'tarea' %}col-12{% else %}col-md-4{% endif %}">
+    <div class="card h-100">
+      <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        Tareas
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalTarea">Agregar</button>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for tarea in tareas %}
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <strong>{{ tarea.titulo }}</strong> <span class="badge bg-secondary">{{ tarea.estado }}</span><br>
+              {% if tarea.descripcion %}<small class="text-muted">{{ tarea.descripcion|truncatechars:50 }}</small><br>{% endif %}
+              {% if tarea.fecha_inicio %}<span class="badge bg-light text-dark">Inicio: {{ tarea.fecha_inicio }}</span>{% endif %}
+              {% if tarea.fecha_fin %}<span class="badge bg-light text-dark ms-1">Fin: {{ tarea.fecha_fin }}</span>{% endif %}
+              {% if tarea.recurrencia and tarea.recurrencia != 'ninguna' %}<span class="badge bg-info text-dark ms-1">{{ tarea.recurrencia|capfirst }}</span>{% endif %}
+            </div>
+            <div class="ms-2 d-flex align-items-center">
+              <form method="post" action="{% url 'marcar_tarea_completada' tarea.id %}" class="me-1 d-inline-block marcar-tarea-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-success" title="Marcar como completada"><i class="bi bi-check-circle"></i></button>
+              </form>
+              <button class="btn btn-sm btn-link text-primary" data-bs-toggle="modal" data-bs-target="#modalEditarTarea{{ tarea.id }}"><i class="bi bi-pencil-square"></i></button>
+              <form method="post" action="{% url 'eliminar_tarea' tarea.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </li>
+          <!-- Modal editar tarea -->
+          <div class="modal fade" id="modalEditarTarea{{ tarea.id }}" tabindex="-1" aria-labelledby="modalEditarTareaLabel{{ tarea.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="post" action="{% url 'editar_tarea' tarea.id %}">
+                  {% csrf_token %}
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarTareaLabel{{ tarea.id }}">Editar Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label">Título</label>
+                      <input type="text" class="form-control" name="titulo" value="{{ tarea.titulo }}" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Descripción</label>
+                      <textarea class="form-control" name="descripcion" rows="2">{{ tarea.descripcion }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Fecha inicio</label>
+                      <input type="date" class="form-control" name="fecha_inicio" value="{{ tarea.fecha_inicio }}">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Fecha fin</label>
+                      <input type="date" class="form-control" name="fecha_fin" value="{{ tarea.fecha_fin }}">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Recurrencia</label>
+                      <select class="form-select" name="recurrencia">
+                        <option value="ninguna" {% if tarea.recurrencia == 'ninguna' %}selected{% endif %}>Ninguna</option>
+                        <option value="diaria" {% if tarea.recurrencia == 'diaria' %}selected{% endif %}>Diaria</option>
+                        <option value="semanal" {% if tarea.recurrencia == 'semanal' %}selected{% endif %}>Semanal</option>
+                        <option value="mensual" {% if tarea.recurrencia == 'mensual' %}selected{% endif %}>Mensual</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Categoría</label>
+                      <select class="form-select" name="categoria">
+                        <option value="">Sin categoría</option>
+                        {% for c in categorias %}
+                          <option value="{{ c.id }}" {% if tarea.categoria and tarea.categoria.id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <li class="list-group-item">No hay tareas.</li>
+        {% endfor %}
+      </ul>
+      {% if tareas.has_other_pages %}
+      <nav class="mt-2">
+        <ul class="pagination pagination-sm justify-content-center">
+          {% if tareas.has_previous %}
+            <li class="page-item"><a class="page-link" href="?tareas_page={{ tareas.previous_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&laquo;</a></li>
+          {% endif %}
+          {% for num in tareas.paginator.page_range %}
+            <li class="page-item {% if tareas.number == num %}active{% endif %}"><a class="page-link" href="?tareas_page={{ num }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">{{ num }}</a></li>
+          {% endfor %}
+          {% if tareas.has_next %}
+            <li class="page-item"><a class="page-link" href="?tareas_page={{ tareas.next_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&raquo;</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% if not tipo or tipo == 'presupuesto' %}
+  <div class="{% if tipo == 'presupuesto' %}col-12{% else %}col-md-4{% endif %}">
+    <div class="card h-100">
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        Presupuestos
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalPresupuesto">Agregar</button>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for presupuesto in presupuestos %}
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <strong>{{ presupuesto.titulo }}</strong><br>
+              {% if presupuesto.descripcion %}<small class="text-muted">{{ presupuesto.descripcion|truncatechars:50 }}</small><br>{% endif %}
+              {% if presupuesto.link %}<a href="{{ presupuesto.link }}" target="_blank">Ver enlace</a><br>{% endif %}
+              {% if presupuesto.precio %}<span class="badge bg-success">${{ presupuesto.precio }}</span>{% endif %}
+            </div>
+            <div class="ms-2">
+              <button class="btn btn-sm btn-link text-primary" data-bs-toggle="modal" data-bs-target="#modalEditarPresupuesto{{ presupuesto.id }}"><i class="bi bi-pencil-square"></i></button>
+              <form method="post" action="{% url 'eliminar_presupuesto' presupuesto.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </li>
+          <!-- Modal editar presupuesto -->
+          <div class="modal fade" id="modalEditarPresupuesto{{ presupuesto.id }}" tabindex="-1" aria-labelledby="modalEditarPresupuestoLabel{{ presupuesto.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form method="post" action="{% url 'editar_presupuesto' presupuesto.id %}">
+                  {% csrf_token %}
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarPresupuestoLabel{{ presupuesto.id }}">Editar Presupuesto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label">Título</label>
+                      <input type="text" class="form-control" name="titulo" value="{{ presupuesto.titulo }}" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Descripción</label>
+                      <textarea class="form-control" name="descripcion" rows="2">{{ presupuesto.descripcion }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Link</label>
+                      <input type="url" class="form-control" name="link" value="{{ presupuesto.link }}">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Precio</label>
+                      <input type="number" class="form-control" name="precio" min="0" step="0.01" value="{{ presupuesto.precio }}">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Categoría</label>
+                      <select class="form-select" name="categoria">
+                        <option value="">Sin categoría</option>
+                        {% for c in categorias %}
+                          <option value="{{ c.id }}" {% if presupuesto.categoria and presupuesto.categoria.id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <li class="list-group-item">No hay presupuestos.</li>
+        {% endfor %}
+      </ul>
+      {% if presupuestos.has_other_pages %}
+      <nav class="mt-2">
+        <ul class="pagination pagination-sm justify-content-center">
+          {% if presupuestos.has_previous %}
+            <li class="page-item"><a class="page-link" href="?presupuestos_page={{ presupuestos.previous_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&laquo;</a></li>
+          {% endif %}
+          {% for num in presupuestos.paginator.page_range %}
+            <li class="page-item {% if presupuestos.number == num %}active{% endif %}"><a class="page-link" href="?presupuestos_page={{ num }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">{{ num }}</a></li>
+          {% endfor %}
+          {% if presupuestos.has_next %}
+            <li class="page-item"><a class="page-link" href="?presupuestos_page={{ presupuestos.next_page_number }}{% if espacio %}&espacio={{ espacio.id }}{% endif %}{% if tipo %}&tipo={{ tipo }}{% endif %}{% if categoria_id %}&categoria={{ categoria_id }}{% endif %}">&raquo;</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal para agregar Nota -->
+<div class="modal fade" id="modalNota" tabindex="-1" aria-labelledby="modalNotaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'crear_nota' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNotaLabel">Agregar Nota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="tituloNota" class="form-label">Título</label>
+            <input type="text" class="form-control" id="tituloNota" name="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label for="contenidoNota" class="form-label">Contenido</label>
+            <textarea class="form-control" id="contenidoNota" name="contenido" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="categoriaNota" class="form-label">Categoría</label>
+            <select class="form-select" id="categoriaNota" name="categoria">
+              <option value="">Sin categoría</option>
+              {% for c in categorias %}
+                <option value="{{ c.id }}">{{ c.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if espacio %}
+            <input type="hidden" name="espacio" value="{{ espacio.id }}">
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para agregar Tarea -->
+<div class="modal fade" id="modalTarea" tabindex="-1" aria-labelledby="modalTareaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'crear_tarea' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTareaLabel">Agregar Tarea</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="tituloTarea" class="form-label">Título</label>
+            <input type="text" class="form-control" id="tituloTarea" name="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label for="descripcionTarea" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="fechaInicioTarea" class="form-label">Fecha inicio</label>
+            <input type="date" class="form-control" id="fechaInicioTarea" name="fecha_inicio">
+          </div>
+          <div class="mb-3">
+            <label for="fechaFinTarea" class="form-label">Fecha fin</label>
+            <input type="date" class="form-control" id="fechaFinTarea" name="fecha_fin">
+          </div>
+          <div class="mb-3">
+            <label for="recurrenciaTarea" class="form-label">Recurrencia</label>
+            <select class="form-select" id="recurrenciaTarea" name="recurrencia">
+              <option value="ninguna">Ninguna</option>
+              <option value="diaria">Diaria</option>
+              <option value="semanal">Semanal</option>
+              <option value="mensual">Mensual</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="categoriaTarea" class="form-label">Categoría</label>
+            <select class="form-select" id="categoriaTarea" name="categoria">
+              <option value="">Sin categoría</option>
+              {% for c in categorias %}
+                <option value="{{ c.id }}">{{ c.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if espacio %}
+            <input type="hidden" name="espacio" value="{{ espacio.id }}">
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para agregar Presupuesto -->
+<div class="modal fade" id="modalPresupuesto" tabindex="-1" aria-labelledby="modalPresupuestoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'crear_presupuesto' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalPresupuestoLabel">Agregar Presupuesto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="tituloPresupuesto" class="form-label">Título</label>
+            <input type="text" class="form-control" id="tituloPresupuesto" name="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label for="descripcionPresupuesto" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcionPresupuesto" name="descripcion" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="linkPresupuesto" class="form-label">Link</label>
+            <input type="url" class="form-control" id="linkPresupuesto" name="link">
+          </div>
+          <div class="mb-3">
+            <label for="precioPresupuesto" class="form-label">Precio</label>
+            <input type="number" class="form-control" id="precioPresupuesto" name="precio" min="0" step="0.01">
+          </div>
+          <div class="mb-3">
+            <label for="categoriaPresupuesto" class="form-label">Categoría</label>
+            <select class="form-select" id="categoriaPresupuesto" name="categoria">
+              <option value="">Sin categoría</option>
+              {% for c in categorias %}
+                <option value="{{ c.id }}">{{ c.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if espacio %}
+            <input type="hidden" name="espacio" value="{{ espacio.id }}">
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
