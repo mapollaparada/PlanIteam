@@ -19,4 +19,4 @@ def read_s3_db():
         raise
 
 def write_s3_db(data):
-    s3.put_object(Bucket=BUCKET, Key=KEY, Body=json.dumps(data, ensure_ascii=False, indent=4).encode("utf-8"))
+    s3.put_object(Bucket=BUCKET, Key=KEY, Body=json.dumps(data, ensure_ascii=False, indent=4).encode("utf-8"
