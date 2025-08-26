@@ -35,6 +35,10 @@ staticfiles
 # VS Code
 .vscode/
 
+# Environments
+ambv/
+env/
+
 # Docker
 *.pid
 docker-compose.override.yml
