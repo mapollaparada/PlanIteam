@@ -6,6 +6,9 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 import csv
 from django.http import HttpResponse
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from .serializers import NotaSerializer, TareaSerializer, PresupuestoSerializer, CategoriaSerializer, EspacioSerializer
 
 @login_required
 def dashboard(request):
@@ -295,5 +298,31 @@ def eliminar_presupuesto(request, presupuesto_id):
     presupuesto = get_object_or_404(Presupuesto, id=presupuesto_id, usuario=request.user)
     presupuesto.delete()
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+class NotaViewSet(viewsets.ModelViewSet):
+    queryset = Nota.objects.all()
+    serializer_class = NotaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Nota.objects.filter(usuario=self.request.user)
+class TareaViewSet(viewsets.ModelViewSet):
+    queryset = Tarea.objects.all()
+    serializer_class = TareaSerializer
+
+class PresupuestoViewSet(viewsets.ModelViewSet):
+    queryset = Presupuesto.objects.all()
+    serializer_class = PresupuestoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Presupuesto.objects.filter(usuario=self.request.user)
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+
+class EspacioViewSet(viewsets.ModelViewSet):
+    queryset = Espacio.objects.all()
+    serializer_class = EspacioSerializer
 
 # Create your views here.

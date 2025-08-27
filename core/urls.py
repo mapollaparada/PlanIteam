@@ -1,6 +1,16 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from rest_framework import routers
+from .views import NotaViewSet, TareaViewSet, PresupuestoViewSet, CategoriaViewSet, EspacioViewSet
+from rest_framework.authtoken.views import obtain_auth_token
+
+router = routers.DefaultRouter()
+router.register(r'notas', NotaViewSet)
+router.register(r'tareas', TareaViewSet)
+router.register(r'presupuestos', PresupuestoViewSet)
+router.register(r'categorias', CategoriaViewSet)
+router.register(r'espacios', EspacioViewSet)
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -20,4 +30,5 @@ urlpatterns = [
     path('editar-presupuesto/<int:presupuesto_id>/', views.editar_presupuesto, name='editar_presupuesto'),
     path('eliminar-presupuesto/<int:presupuesto_id>/', views.eliminar_presupuesto, name='eliminar_presupuesto'),
     path('exportar-csv/', views.exportar_csv, name='exportar_csv'),
-]
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
+] + router.urls
