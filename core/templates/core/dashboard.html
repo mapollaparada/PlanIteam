@@ -27,7 +27,6 @@
       <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategoria">+ Categoría</button>
     </div>
     <div class="col-auto">
-      <a href="{% url 'exportar_csv' %}?{% if espacio %}espacio={{ espacio.id }}&{% endif %}{% if tipo %}tipo={{ tipo }}&{% endif %}{% if categoria_id %}categoria={{ categoria_id }}&{% endif %}" class="btn btn-outline-success"><i class="bi bi-download"></i> Exportar CSV</a>
     </div>
   </form>
 </div>

@@ -10,10 +10,11 @@ PlanIteam es una aplicación web familiar para organizar espacios, tareas, notas
 - **Categorías personalizables**
 - **CRUD rápido** con modales y filtros
 - **Paginación** para grandes volúmenes de datos
-- **Exportación a CSV**
 - **Autenticación de usuarios**
 - **Panel de administración Django**
 - **Diseño responsive** con Bootstrap
+- **API REST** protegida por token (DRF)
+- **Preparado para despliegue con Gunicorn y Nginx**
 
 ## Instalación y uso rápido
 1. Clona el repositorio:
@@ -38,6 +39,17 @@ PlanIteam es una aplicación web familiar para organizar espacios, tareas, notas
    python manage.py runserver
    ```
 5. Accede a `http://127.0.0.1:8000/` y ¡comienza a organizar!
+
+## API REST
+- Acceso seguro mediante autenticación por token (DRF).
+- Endpoints para CRUD de espacios, notas, tareas, categorías y presupuestos.
+- Filtrado automático por usuario autenticado.
+- Listo para integración móvil y consumo externo.
+
+## Despliegue profesional
+- **Gunicorn**: Servidor WSGI para producción.
+- **Nginx**: Proxy reverso y servidor de archivos estáticos.
+- Configuración recomendada para producción en EC2, VPS o servidores dedicados.
 
 ## Variables de entorno
 Configura tus secretos y parámetros en un archivo `.env`:
